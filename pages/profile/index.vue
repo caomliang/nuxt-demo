@@ -6,16 +6,9 @@
       <div class="row">
 
         <div class="col-xs-12 col-md-10 offset-md-1">
-          <img src="http://i.imgur.com/Qr71crq.jpg" class="user-img" />
-          <h4>Eric Simons</h4>
-          <p>
-            Cofounder @GoThinkster, lived in Aol's HQ for a few months, kinda looks like Peeta from the Hunger Games
-          </p>
-          <button class="btn btn-sm btn-outline-secondary action-btn">
-            <i class="ion-plus-round"></i>
-            &nbsp;
-            Follow Eric Simons 
-          </button>
+          <img :src="profile.image" class="user-img" />
+          <h4>{{profile.username}}</h4>
+          <p>{{profile.bio}}</p>
         </div>
 
       </div>
@@ -29,53 +22,49 @@
         <div class="articles-toggle">
           <ul class="nav nav-pills outline-active">
             <li class="nav-item">
-              <a class="nav-link active" href="">My Articles</a>
+              <!-- <a class="nav-link active" href="">My Articles</a> -->
+              <nuxt-link class="nav-link" :class="{active: tab === 'my_article'}" :to="{
+                name: 'profile',
+                query: { tab: 'my_article' }
+              }" exact>My Articles</nuxt-link>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" href="">Favorited Articles</a>
+            <li class="nav-item" >
+              <nuxt-link class="nav-link" :class="{active: tab === 'favorited_article'}" :to="{
+                name: 'profile',
+                query: { tab: 'favorited_article' }
+              }" exact>Favorited Articles</nuxt-link>
             </li>
           </ul>
         </div>
 
-        <div class="article-preview">
+        <div class="article-preview" v-for="article in articles" :key="article.slug">
           <div class="article-meta">
             <a href=""><img src="http://i.imgur.com/Qr71crq.jpg" /></a>
             <div class="info">
-              <a href="" class="author">Eric Simons</a>
-              <span class="date">January 20th</span>
+              <a href="" class="author">{{article.author.username}}</a>
+              <span class="date">{{article.createdAt | formateDate }}</span>
             </div>
-            <button class="btn btn-outline-primary btn-sm pull-xs-right">
-              <i class="ion-heart"></i> 29
+            <button class="btn btn-outline-primary btn-sm pull-xs-right"  @click="addFavoriteSlug(article)">
+              <i class="ion-heart"></i> {{article.favoritesCount}}
             </button>
           </div>
-          <a href="" class="preview-link">
-            <h1>How to build webapps that scale</h1>
-            <p>This is the description for the post.</p>
+          <nuxt-link :to="{
+              name: 'article',
+              params: { slug: article.slug }
+            }" class="preview-link">
+            <h1>{{article.title}}</h1>
+            <p>{{article.description}}</p>
             <span>Read more...</span>
-          </a>
+          </nuxt-link>
         </div>
-
-        <div class="article-preview">
-          <div class="article-meta">
-            <a href=""><img src="http://i.imgur.com/N4VcUeJ.jpg" /></a>
-            <div class="info">
-              <a href="" class="author">Albert Pai</a>
-              <span class="date">January 20th</span>
-            </div>
-            <button class="btn btn-outline-primary btn-sm pull-xs-right">
-              <i class="ion-heart"></i> 32
-            </button>
-          </div>
-          <a href="" class="preview-link">
-            <h1>The song you won't ever stop singing. No matter how hard you try.</h1>
-            <p>This is the description for the post.</p>
-            <span>Read more...</span>
-            <ul class="tag-list">
-              <li class="tag-default tag-pill tag-outline">Music</li>
-              <li class="tag-default tag-pill tag-outline">Song</li>
-            </ul>
-          </a>
-        </div>
+        <!-- 分页 -->
+        <nav>
+          <ul class="pagination">
+            <li class="page-item" :class="{active: item===page}" v-for="item in totalPage" :key="item">
+              <nuxt-link class="page-link" :to="{name: 'profile', query: {page: item, tab: tab}}">{{item}}</nuxt-link>
+            </li>
+          </ul>
+        </nav>
       </div>
     </div>
   </div>
@@ -83,8 +72,52 @@
 </div>
 </template>
 <script>
+import { getProfile } from '@/api/profile'
+import { getArticle, addFavorite, cancelFavorite } from '@/api/article'
+
 export default {
   middleware: 'authenticated',
-  name: 'profilePage'
+  name: 'profilePage',
+  async asyncData ({query, store}) {
+    const page = Number.parseInt(query.page || 1)
+    const limit = 5
+    const tab = query.tab || 'my_article'
+    const [ articleData, profileData ] = await Promise.all([getArticle({
+    limit,
+    offset: (page -1) * limit,
+    tag: query.tag,
+    favorited: tab === 'favorited_article' ? store.state.userInfo.username : null,
+    author: tab === 'my_article' ? store.state.userInfo.username : null
+  }), getProfile(store.state.userInfo.username)])
+  const { articles, articlesCount } = articleData.data
+  const { profile } = profileData.data
+    return {
+      profile,
+      articles,
+      articlesCount,
+      tab,
+      page,
+      limit
+    }
+  },
+  watchQuery:['page', 'tab'],
+  computed: {
+    totalPage () {
+      return Math.ceil(this.articlesCount / this.limit)
+    }
+  },
+  methods: {
+    async addFavoriteSlug (article) {
+      if (article.favorited) {
+        await cancelFavorite(article.slug)
+        article.favorited = false
+        article.favoritesCount += -1
+      } else {
+        await addFavorite(article.slug)
+        article.favorited = true
+        article.favoritesCount += 1
+      }
+    }
+  }
 }
 </script>

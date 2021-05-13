@@ -7,6 +7,9 @@ export const state = () => {
 export const mutations = {
   setUser (state, data) {
     state.userInfo = data
+  },
+  removeUser (state, data) {
+    state.userInfo = null
   }
 }
 

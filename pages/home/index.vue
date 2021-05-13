@@ -30,8 +30,10 @@
               <!-- <a class="nav-link active" href="">#{{tag}}</a> -->
               <nuxt-link class="nav-link" :class="{active: tab === 'tag'}" :to="{
                 name: 'home',
-                tab: 'tag',
-                tag: tag
+                query: { 
+                  tab: 'tag',
+                  tag: tag
+                 }
               }" exact>#{{tag}}</nuxt-link>
             </li>
           </ul>

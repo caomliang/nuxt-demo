@@ -16,3 +16,18 @@ export const register = data => {
     data
   })
 }
+
+export const getCurrentUser = () => {
+  return request({
+    url: '/api/user',
+    method: 'get'
+  })
+}
+
+export const updateCurrentUser = data => {
+  return request({
+    url: '/api/user',
+    method: 'put',
+    data
+  })
+}

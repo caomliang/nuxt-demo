@@ -19,7 +19,7 @@ module.exports = {
           name: 'register',
           component: resolve(__dirname, 'pages/login'),
         }, {
-          path: '/profile/:username',
+          path: 'profile',
           name: 'profile',
           component: resolve(__dirname, 'pages/profile'),
         }, {

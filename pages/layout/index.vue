@@ -17,7 +17,7 @@
               <nuxt-link class="nav-link" to="/settings"><i class="ion-gear-a"></i>&nbsp;Settings</nuxt-link>
             </li>
             <li class="nav-item">
-              <nuxt-link class="nav-link" :to="`/profile/${userInfo ? userInfo['id'] : ''}`">
+              <nuxt-link class="nav-link" to="/profile">
                 <img :src="userInfo.image" alt="" class="user-pic">{{userInfo.username}}
               </nuxt-link>
             </li>
